@@ -1,0 +1,9 @@
+.git/
+.github/
+.claude/
+specs/
+data/
+web/node_modules/
+web/dist/
+**/*.db
+**/*_test.go

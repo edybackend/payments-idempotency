@@ -1,0 +1,15 @@
+name: payments-idempotency
+
+services:
+  payments:
+    build:
+      context: .
+    image: payments-idempotency:local
+    ports:
+      - "8080:8080" # panel: http://localhost:8080 · API: http://localhost:8080/v1/payments
+    volumes:
+      - payments-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  payments-data:
