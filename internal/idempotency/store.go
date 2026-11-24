@@ -27,13 +27,13 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
 type Outcome int
 
 const (
-	// Execute: the key was claimed by this request (new, or taken over from a crashed one).
+	// Execute means the key was claimed by this request (new, or taken over from a crashed one).
 	Execute Outcome = iota
-	// InProgress: another request with this key is running right now.
+	// InProgress means another request with this key is running right now.
 	InProgress
-	// Mismatch: the key was used before with a different request.
+	// Mismatch means the key was used before with a different request.
 	Mismatch
-	// Replay: the request already finished; Record holds its response.
+	// Replay means the request already finished; Record holds its response.
 	Replay
 )
 
