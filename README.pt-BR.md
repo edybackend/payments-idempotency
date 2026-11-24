@@ -13,8 +13,6 @@ Uma API de pagamentos em **Go** em que uma nova tentativa nunca cobra o cartão 
 A chave também vai para o adquirente (simulado). Se a resposta se perder *depois* que o dinheiro saiu, a nova tentativa
 encontra a mesma cobrança. Um painel **React** embutido no binário mostra cada caso com um clique.
 
-Pequeno de propósito: dá para ler em uns 15 minutos e subir com um comando.
-
 ![Painel: duplo clique ×5 dá um 201 e quatro 409; resposta perdida dá 502 e depois 201; pagamentos e cobranças continuam iguais](docs/panel.png)
 
 ## Como rodar
@@ -55,7 +53,7 @@ sequenceDiagram
     participant P as Pagamentos
     participant A as Adquirente (simulado)
     C->>M: POST /v1/payments · Idempotency-Key: k
-    M->>M: INSERT da chave (processing, impressão digital) — um comando só
+    M->>M: INSERT da chave (processing, impressão digital), um comando só
     M->>P: executa o handler
     P->>A: cobrar(k, valor, cartão)
     A-->>P: aprovado (deduplicado por k)
@@ -64,7 +62,7 @@ sequenceDiagram
     M->>M: grava status + corpo junto da chave
     M-->>C: 201
     C->>M: mesma requisição de novo (timeout, duplo clique…)
-    M-->>C: 201 gravado, Idempotent-Replayed: true — o handler não roda
+    M-->>C: 201 gravado, Idempotent-Replayed: true (o handler não roda)
 ```
 
 | A chave está… | Resposta |
@@ -146,16 +144,9 @@ specs/                  especificações (spec primeiro)
 - **O replay guarda corpo e status, não todos os cabeçalhos.** O `Location` não é reproduzido.
 - **SQLite com uma conexão.** As escritas são serializadas, o que basta aqui; o PostgreSQL usaria os mesmos comandos com lock de linha.
 
-## Engenharia assistida por IA
+## Trabalhando com um agente de IA
 
-Este projeto foi construído com o Claude Code sob controles explícitos de engenharia:
-
-- **Regras do projeto** ([`CLAUDE.md`](CLAUDE.md)) definem a estrutura e as regras de pagamento que o agente segue.
-- **Hooks** ([`.claude/settings.json`](.claude/settings.json)) rodam `gofmt` em cada mudança, bloqueiam edição de segredos, bancos, lock files e saída de build, **bloqueiam rota POST/PATCH sem o middleware de idempotência**, **bloqueiam log de dados de cartão** e rodam vet, testes com race e o build do painel antes de a tarefa ser dada como pronta.
-- **Spec primeiro**: cada funcionalidade começa como especificação em [`specs/`](specs), com critérios de aceite.
-- **Os mesmos portões de qualidade para cada linha**: o CI roda gofmt, vet, testes com race, golangci-lint, lint e build do painel, uma execução no contêiner com requisições simultâneas e varredura de segredos.
-
-A arquitetura é minha, e eu reviso cada mudança.
+Duas regras de uma API de pagamentos não podem depender de alguém lembrar delas: todo POST passa pelo middleware de idempotência, e número de cartão nunca vai para log. As duas são hooks em [`.claude/`](.claude), então um agente de IA trabalhando neste código é barrado antes de a mudança entrar. O [`CLAUDE.md`](CLAUDE.md) lista o resto.
 
 ## Licença
 

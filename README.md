@@ -13,8 +13,6 @@ API works:
 The key also travels to the (simulated) card acquirer. If the answer is lost *after* the money moved, the retry still finds
 the same charge. A **React** panel embedded in the binary lets you click through every case.
 
-Small on purpose: it can be read in about 15 minutes and started with one command.
-
 ![Panel: a double click ×5 gives one 201 and four 409s; a lost answer gives 502 then 201; payments and acquirer charges stay equal](docs/panel.png)
 
 ## Quick start
@@ -55,7 +53,7 @@ sequenceDiagram
     participant P as Payments
     participant A as Acquirer (simulated)
     C->>M: POST /v1/payments · Idempotency-Key: k
-    M->>M: INSERT key (processing, fingerprint) — one statement
+    M->>M: INSERT key (processing, fingerprint), one statement
     M->>P: run the handler
     P->>A: charge(k, amount, card)
     A-->>P: approved (deduplicated by k)
@@ -64,7 +62,7 @@ sequenceDiagram
     M->>M: store status + body with the key
     M-->>C: 201
     C->>M: same request again (timeout, double click…)
-    M-->>C: stored 201, Idempotent-Replayed: true — the handler does not run
+    M-->>C: stored 201, Idempotent-Replayed: true (the handler does not run)
 ```
 
 | The key is… | Answer |
@@ -146,16 +144,9 @@ specs/                  feature specs (spec-first workflow)
 - **Replays keep the body and status, not every header.** `Location` is not replayed.
 - **SQLite with one connection.** Writes are serialized, which is fine here; PostgreSQL would use the same statements with row-level locking.
 
-## AI-Assisted Engineering
+## Working with an AI agent
 
-This project was built with Claude Code under explicit engineering controls:
-
-- **Project rules** ([`CLAUDE.md`](CLAUDE.md)) define the layout and the payment rules the agent must follow.
-- **Hooks** ([`.claude/settings.json`](.claude/settings.json)) run `gofmt` on every change, block edits to secrets, databases, lock files and build output, **block any POST/PATCH route without the idempotency middleware**, **block logging card data**, and run vet, race tests and the panel build before a task is considered done.
-- **Spec-first**: each feature starts as a spec in [`specs/`](specs) with acceptance criteria.
-- **Same quality gates for every line**: CI runs gofmt, vet, race tests, golangci-lint, the panel lint and build, a container run with concurrent requests, and secret scanning.
-
-I own the architecture and review every change.
+Two rules of a payment API should never depend on someone remembering them: every POST goes through the idempotency middleware, and card numbers never reach a log. Both are hooks in [`.claude/`](.claude), so an AI agent working in this code is stopped before the change lands. [`CLAUDE.md`](CLAUDE.md) lists the rest.
 
 ## License
 
