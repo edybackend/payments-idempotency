@@ -1,0 +1,17 @@
+# Local SQLite data
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Go
+/payments
+*.test
+*.out
+
+# Web
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep
+*.log
+.DS_Store
